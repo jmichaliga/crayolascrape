@@ -1,31 +1,33 @@
 const puppeteer = require('puppeteer')
 const chalk = require('chalk')
+const log = console.log
 
-const heyo = async () => {
+const crayHolaWorld = async () => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.goto('https://en.wikipedia.org/wiki/List_of_Crayola_crayon_colors')
-  //await page.screenshot({path: 'example.png'})
   let colors = []
   await page.waitForSelector('.wikitable tbody tr')
-  
   const colorInfo = await page.evaluate(() => {
     let data = []
     colors = document.querySelectorAll('.wikitable tbody tr')
     for (const color of colors) {
-      console.log(color)
-      const name = color.children[1].innerText || 'XXX'
+      const name = color.innerText.split('\t')[1] || 'XXX'
       const bg = color.children[0].style.background
       const time = +new Date()
-      data.push({ name, bg, time })
+      if (name && bg) {
+        data.push({ name, bg, time })
+      }
     }
     return data
   })
-  console.log('>', colorInfo)
-  console.log('<', data)
-
+  const regExp = /\(([^)]+)\)/;
+  for(let c of colorInfo){
+    var matches = regExp.exec(c.bg)
+    var values = matches[1].split(', ')
+    log(chalk.rgb(+values[0], +values[1], +values[2])(`${c.bg} - ${c.name}`))
+  }
   await browser.close()
 }
-
-heyo()
-console.log(chalk.green('heyo'))
+crayHolaWorld()
+log(chalk.green('crayHolaWorld'))
